@@ -10,11 +10,25 @@ from flask import render_template
 from flask.ext.script import Manager
 from flask.ext.bootstrap import Bootstrap
 from flask.ext.moment import Moment
+from flask.ext.wtf import Form
+from wtforms import StringField, SubmitField
+from wtforms.validators import Required
+from flask import session
+from flask import url_for
+from flask import flash
 
 app = Flask(__name__)
 manager = Manager(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
+
+#为了实现CSRF保护，为表单设置密钥
+app.config['SECRET_KEY'] = 'hard to guess string'
+
+#name表单
+class NameForm(Form):
+    name =StringField('what is your name?', validators=[Required()])
+    submit = SubmitField('Submit')
 
 #返回一个浏览器头部信息
 # @app.route('/')
@@ -34,11 +48,20 @@ moment = Moment(app)
 # def index():
 #     return redirect('http://www.baidu.com')
 
-#使用模板
-@app.route('/')
+#使用表单
+@app.route('/', methods=['GET','POST'])
 def index():
+#    session.pop('_flashes', None)              flash中不能直接使用中文，必须前面加上u转成unicode
+#由于flash同样会产生session，所以产生一次unicodedecodeerror后会一指产生，所以可以用上述语句先清除掉
+    form=NameForm()
+    if form.validate_on_submit():
+        old_name=session.get('name')
+        if old_name is not None and old_name!=form.name.data:
+            flash(u'看起来你似乎改了名字！')
+        session['name']=form.name.data
+        return redirect(url_for('index'))
     return render_template('index.html',
-                           current_time=datetime.utcnow())
+                           form=form, name=session.get('name'))
 
 # #响应url地址的参数
 # @app.route('/user/<name>')
