@@ -5,13 +5,16 @@ from flask import Flask
 from flask import request
 from flask import make_response
 from flask import redirect
+from datetime import datetime
 from flask import render_template
 from flask.ext.script import Manager
 from flask.ext.bootstrap import Bootstrap
+from flask.ext.moment import Moment
 
 app = Flask(__name__)
 manager = Manager(app)
 bootstrap = Bootstrap(app)
+moment = Moment(app)
 
 #返回一个浏览器头部信息
 # @app.route('/')
@@ -34,7 +37,8 @@ bootstrap = Bootstrap(app)
 #使用模板
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html',
+                           current_time=datetime.utcnow())
 
 # #响应url地址的参数
 # @app.route('/user/<name>')
