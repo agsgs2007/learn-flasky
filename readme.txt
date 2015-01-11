@@ -15,3 +15,9 @@ virturalenv venv
 3、在命令行模式下输入：python hello.py runserver --host 0.0.0.0，在网段的其他的电脑都能登陆此服务器
 4、手机上验证成功
 		在手机浏览器输入192.168.0.104:5000，即显示
+5、创建了base.html模板
+6、根据base模板，创建了index,user,404页面
+7、创建了form表单，使用了wtf快速表单技术
+8、使用了flash技术，此时由于直接在代码中输入中文，出现了unicodeerror问题，最后使用了u''来解决
+9、创建了数据库，使用sqlite3；
+10、创建了命令行，使用了数据迁移
