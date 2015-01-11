@@ -6,8 +6,10 @@ from flask import request
 from flask import make_response
 from flask import redirect
 from flask import render_template
+from flask.ext.script import Manager
 
 app = Flask(__name__)
+manager = Manager(app)
 
 #返回一个浏览器头部信息
 # @app.route('/')
@@ -43,4 +45,5 @@ def user(name):
     return render_template('user.html', name=name)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+#    app.run(debug=True)
+    manager.run()
