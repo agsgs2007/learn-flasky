@@ -21,3 +21,24 @@ virturalenv venv
 8、使用了flash技术，此时由于直接在代码中输入中文，出现了unicodeerror问题，最后使用了u''来解决
 9、创建了数据库，使用sqlite3；
 10、创建了命令行，使用了数据迁移
+
+
+2015.1.17
+1、实践了第七章，将hello.py分解成几个文件，其中涉及到几个技术：
+	1）模块的导入；
+	2）__init__文件比较重要
+	3）单元测试技术
+	4）再次使用了manage和shell，这里有个细节
+			由于采取了运行时生成app技术，不是直接运行启动的，所以一开始不知道app从哪里生成，但是实际上在manage.py中app一开始就由create_app产生，所以在命令行模式下是能使用这个实例的。
+	5）数据迁移
+			今天数据迁移并不成功，网页运行时，提交数据时提示没有这个表，说明数据库里面并没有这个表，所以需要手动生成表，经过研究，需要使用shell。
+			从第4点看出，使用shell时，app能生成，所以可以在app_context下工作，步骤如下：
+			>>>python manage.py shell
+			>>>app
+			>>>from app import db
+			>>>db.create_all() #此步创建了数据库和表
+			>>>from app.models import User,Role
+			>>>User.query.all()  #此步能运行说明数据表已经创建成功
+			
+			然后再次运行网站python manage.py runserver
+			在表单中输入数据提交，这次能够正常执行
