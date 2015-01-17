@@ -19,6 +19,7 @@ from flask import url_for
 from flask import flash
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.migrate import Migrate, MigrateCommand
+from flask.ext.mail import Message, Mail
 
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -27,6 +28,7 @@ app = Flask(__name__)
 manager = Manager(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
+mail=Mail(app)
 
 #为了实现CSRF保护，为表单设置密钥
 app.config['SECRET_KEY'] = 'hard to guess string'
@@ -34,6 +36,10 @@ app.config['SECRET_KEY'] = 'hard to guess string'
 app.config['SQLALCHEMY_DATABASE_URI']=\
     'sqlite:///'+os.path.join(basedir,'data.sqlite')
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']=True
+app.config['FLASKY_MAIL_SUBJECT_PREFIX']='[Flasky]'
+app.config['FLASKY_MAIL_SENDER']='Flasky Admin<flasky@example.com>'
+app.config['FLASKY_ADMIN']=os.environ.get('FLASKY_ADMIN')
+
 db=SQLAlchemy(app)
 migrate=Migrate(app,db)
 
@@ -101,6 +107,22 @@ class NameForm(Form):
 #     return render_template('index.html',
 #                            form=form, name=session.get('name'))
 
+
+#异步发送邮件
+from threading import Thread
+def send_async_email(app,msg):
+    with app.app_context():
+        mail.send_message(msg)
+
+def send_email(to, subject, template, **kwargs):
+    msg=Message(app.config['FLASKY_MAIL_SUBJECT_PREFIX']+subject,
+                sender=app.config['FLASKY_MAIL_SENDER'], recipients=[to])
+    msg.body=render_template(template+'.txt', **kwargs)
+    msg.html=render_template(template+'.html', **kwargs)
+    thr=Thread(target=send_async_email, args=[app, msg])
+    thr.start()
+    return thr
+
 #在视图中操作数据库
 @app.route('/', methods=['GET','POST'])
 def index():
@@ -112,6 +134,10 @@ def index():
             user=User(username=form.name.data)
             db.session.add(user)
             session['known']=False
+            #每当表单接收到新名字时，向管理员发送邮件
+            if app.config['FLASKY_ADMIN']:
+                send_email(app.config['FLASKY_ADMIN'],'New User',
+                           'mail/new_user',user=user)
         else:
             session['known']=True
         session['name']=form.name.data
